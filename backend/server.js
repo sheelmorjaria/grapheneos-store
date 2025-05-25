@@ -9,7 +9,7 @@ import orderRoutes from './routes/orderRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import { setupInventorySync } from './utils/inventorySync.js';
-
+import seedRoutes from './routes/seedRoutes.js';
 // Load environment variables
 dotenv.config();
 
@@ -18,6 +18,7 @@ connectDB();
 
 // Initialize Express app
 const app = express();
+app.use('/api/seed', seedRoutes);
 
 // Middleware
 if (process.env.NODE_ENV === 'development') {

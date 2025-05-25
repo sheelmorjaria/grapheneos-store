@@ -9,23 +9,32 @@ import Loader from "../components/ui/Loader";
 import Message from "../components/ui/Message";
 
 const HomePage = () => {
-  const { keyword = "", pageNumber = 1 } = useParams();
+   const { keyword = "", pageNumber = 1 } = useParams();
   const [conditionFilter, setConditionFilter] = useState("all");
-
+  
   const dispatch = useDispatch();
-
+  
   const productList = useSelector((state) => state.productList);
-  const { loading, error, products, page, pages } = productList;
-
+  const { loading, error, products = [], page, pages } = productList;
+  
   useEffect(() => {
     dispatch(listProducts(keyword, pageNumber));
   }, [dispatch, keyword, pageNumber]);
-
-  // Filter products based on condition
-  const filteredProducts =
-    conditionFilter === "all"
+  
+  // Add this for debugging
+  useEffect(() => {
+    console.log("Product list state:", { loading, error, products, page, pages });
+    console.log("Condition filter:", conditionFilter);
+  }, [loading, error, products, page, pages, conditionFilter]);
+  
+  // Calculate filtered products - moved inside the return to ensure products exists
+  const getFilteredProducts = () => {
+    if (!products) return [];
+    
+    return conditionFilter === "all"
       ? products
-      : products.filter((product) => product.condition === conditionFilter);
+      : products.filter(product => product.condition === conditionFilter);
+  };
 
   return (
     <>
@@ -75,7 +84,7 @@ const HomePage = () => {
             </h2>
           </div>
         )}
-
+        
         {/* Condition Filter */}
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-2">Filter by Condition</h3>
@@ -129,17 +138,18 @@ const HomePage = () => {
           <Message variant="danger">{error}</Message>
         ) : (
           <>
-            {filteredProducts.length === 0 ? (
+            {products.length === 0 ? (
               <Message>No products found</Message>
             ) : (
               <>
+                {/* Use getFilteredProducts() function to ensure we have a valid array */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {filteredProducts.map((product) => (
+                  {getFilteredProducts().map((product) => (
                     <Product key={product._id} product={product} />
                   ))}
                 </div>
-
-                {/* Pagination - Only show when not filtering or for 'all' filter */}
+                
+                {/* Only show pagination when not filtering or when showing all */}
                 {pages > 1 && conditionFilter === "all" && (
                   <div className="flex justify-center mt-8">
                     <ul className="flex items-center">
@@ -152,7 +162,7 @@ const HomePage = () => {
                                 : `/page/${x + 1}`
                             }
                             className={`px-4 py-2 mx-1 rounded ${
-                              x + 1 === page
+                              x + 1 === parseInt(pageNumber)
                                 ? "bg-primary text-white"
                                 : "bg-gray-200 hover:bg-gray-300"
                             }`}
